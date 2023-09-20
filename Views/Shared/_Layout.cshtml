@@ -32,8 +32,14 @@
                 <ul class="nav navbar-nav">
                     <li><a asp-area="" asp-controller="Home" asp-action="index">Home</a></li>
                     <li><a asp-area="" asp-controller="Home" asp-action="dashboard">Dashboard</a></li>
-                    <li><a asp-area="" asp-controller="account" asp-action="login">Login</a></li>
-                    <li><a asp-area="" asp-controller="account" asp-action="logout">Log Out</a></li>
+                    @if (User.Identity.IsAuthenticated)
+                    {
+                        <li><a asp-area="" asp-controller="account" asp-action="logout">Log Out</a></li>
+                    }
+                    else
+                    {
+                        <li><a asp-area="" asp-controller="account" asp-action="login">Login</a></li>                        
+                    }
                 </ul>
             </div>
         </div>

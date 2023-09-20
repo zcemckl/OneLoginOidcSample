@@ -99,7 +99,7 @@ namespace OidcSampleApp.Controllers
               new KeyValuePair<string, string>("scope", "openid profile email")
           });
 
-          var uri = String.Format("https://{0}.onelogin.com/oidc/token", options.Value.Region);
+          var uri = String.Format("https://{0}.onelogin.com/oidc/2/token", options.Value.Region);
 
           var res = await client.PostAsync(uri, formData);
 
@@ -129,7 +129,7 @@ namespace OidcSampleApp.Controllers
               new KeyValuePair<string, string>("client_secret", options.Value.ClientSecret)
           });
 
-          var uri = String.Format("https://{0}.onelogin.com/oidc/token/revocation", options.Value.Region);
+          var uri = String.Format("https://{0}.onelogin.com/oidc/2/revocation", options.Value.Region);
 
           var res = await client.PostAsync(uri, formData);
 
@@ -143,7 +143,7 @@ namespace OidcSampleApp.Controllers
 
           client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
 
-          var uri = String.Format("https://{0}.onelogin.com/oidc/me", options.Value.Region);
+          var uri = String.Format("https://{0}.onelogin.com/oidc/2/me", options.Value.Region);
 
           var res = await client.GetAsync(uri);
 

@@ -12,6 +12,6 @@ namespace OidcSampleApp.Models
       [JsonProperty("token_type")]
       public string TokenType { get; set; }
       [JsonProperty("expires_in")]
-      public string ExpiresIn { get; set; }
+      public int ExpiresIn { get; set; }
     }
 }

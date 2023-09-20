@@ -5,3 +5,4 @@ bin
 
 # Visual Studio Code
 .vscode
+/.vs

@@ -11,17 +11,20 @@ using System.Security.Claims;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using Newtonsoft.Json;
+using Microsoft.Extensions.Configuration;
+using Microsoft.AspNetCore.Authentication;
+using System.Net;
+using System.Text;
 
 namespace OidcSampleApp.Controllers
 {    public class HomeController : Controller
     {
-        // These variables are only here for visibility in the sample
-        // In production you should move this to a configuration file
-        const string ONELOGIN_CLIENT_ID = "";
-        const string ONELOGIN_CLIENT_SECRET = "";
-        const string ONELOGIN_REGION = "us"; // us or eu
+        private IConfiguration _configuration;
 
-        const string ONELOGIN_SUBDOMAIN = "";
+        public HomeController(IConfiguration configuration)
+        {
+            _configuration = configuration;
+        }
 
         public IActionResult Index()
         {
@@ -35,15 +38,13 @@ namespace OidcSampleApp.Controllers
             var oneLoginUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
             ViewData["Username"] = User.FindFirstValue(ClaimTypes.Name);
+            ViewData["Region"] = _configuration["oidc:region"];
 
-            if(!string.IsNullOrEmpty(ONELOGIN_CLIENT_ID) && !String.IsNullOrEmpty(ONELOGIN_CLIENT_SECRET)){
+            if (!string.IsNullOrEmpty(_configuration["oidc:clientid"]) && !String.IsNullOrEmpty(_configuration["oidc:clientsecret"])){
                 // Get a list of apps for this user
                 var apps = await GetAppsForUser(oneLoginUserId);
                 ViewData["Apps"] = apps;
             }
-
-            // Used for launching apps from the dashboard
-            ViewData["Subdomain"] = ONELOGIN_SUBDOMAIN;
 
             return View();
         }
@@ -60,21 +61,22 @@ namespace OidcSampleApp.Controllers
 
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("bearer", GetAccessToken());
 
-                var res = await client.GetAsync(String.Format("https://api.{0}.onelogin.com/api/1/users/{1}/apps", ONELOGIN_REGION, userId));
+                var res = await client.GetAsync(String.Format("https://{0}.onelogin.com/api/2/users/{1}/apps", _configuration["oidc:region"], userId));
 
                 var json = await res.Content.ReadAsStringAsync();
 
-                var apiResponse = JsonConvert.DeserializeObject<ApiResponse<List<UserApp>>>(json);
+                var apiResponse = JsonConvert.DeserializeObject<List<UserApp>>(json);
 
-                return apiResponse.Data;
+                return apiResponse;
             }
         }
 
         private string GetAccessToken(){
-            using(var client = new HttpClient()){
-
-                client.DefaultRequestHeaders.TryAddWithoutValidation("Authorization", String.Format(
-                    "client_id:{0}, client_secret:{1}", ONELOGIN_CLIENT_ID, ONELOGIN_CLIENT_SECRET));
+            using(var client = new HttpClient())
+            {
+                var credentials = string.Format("{0}:{1}", _configuration["clientid"], _configuration["clientsecret"]);
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
+                "Basic", Convert.ToBase64String(Encoding.UTF8.GetBytes(credentials))); 
 
                 var body = JsonConvert.SerializeObject(new {
                     grant_type = "client_credentials"
@@ -82,7 +84,7 @@ namespace OidcSampleApp.Controllers
 
                 var req = new HttpRequestMessage(){
                     Method = HttpMethod.Post,
-                    RequestUri = new Uri(String.Format("https://api.{0}.onelogin.com/auth/oauth2/v2/token",ONELOGIN_REGION)),
+                    RequestUri = new Uri(String.Format("https://{0}.onelogin.com/auth/oauth2/v2/token", _configuration["oidc:region"])),
                     Content = new StringContent(body)
                 };
 

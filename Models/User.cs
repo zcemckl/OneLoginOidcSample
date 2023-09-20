@@ -24,6 +24,6 @@ namespace OidcSampleApp.Models
       public string LastName { get; set; }
 
       [JsonProperty("updated_at")]
-      public DateTime UpdatedAt { get; set; }
+      public string UpdatedAt { get; set; }
     }
 }
